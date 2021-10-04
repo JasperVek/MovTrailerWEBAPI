@@ -142,15 +142,14 @@ namespace TutorialWebApi
                             // full youtube json item found
                             if(curly == 0)
                             {
-                                // please forgive me
-                                Youtube tempYoutube1 = JsonSerializer.Deserialize<Youtube>(tempStringList[0]);
-                                Youtube tempYoutube2 = JsonSerializer.Deserialize<Youtube>(tempStringList[1]);
-                                Youtube youtubeObject = new Youtube();
-                                youtubeObject.videoId = "/watch?v="+ tempYoutube1.videoId;
-                                youtubeObject.title = tempYoutube2.title;
-
-                                youtubeResults.Add(youtubeObject);
-
+                                if (tempStringList.Count >= 2)
+                                {
+                                    youtubeResults.Add(MergePartialItems(tempStringList[0], tempStringList[1]));
+                                }
+                                else
+                                {
+                                    return null;
+                                }
                                 // reset
                                 tempStringList = new List<string>();
                             }
@@ -170,6 +169,17 @@ namespace TutorialWebApi
             {
                 return null;
             }
+        }
+
+        // merge 2 partial Youtube objects into 1
+        private Youtube MergePartialItems(string temp1, string temp2)
+        {
+            Youtube tempYoutube1 = JsonSerializer.Deserialize<Youtube>(temp1);
+            Youtube tempYoutube2 = JsonSerializer.Deserialize<Youtube>(temp2);
+            Youtube youtubeObject = new Youtube();
+            youtubeObject.videoId = "/watch?v=" + tempYoutube1.videoId;
+            youtubeObject.title = tempYoutube2.title;
+            return youtubeObject;
         }
     }
 }

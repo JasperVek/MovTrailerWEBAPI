@@ -33,10 +33,8 @@ namespace TutorialWebApi.Controllers
             List<Movie> movieResult = new List<Movie>();
 
             // client init + search with searchterm
-            var client = new RestClient(searchMovieUrl + imdbKey +"/" + movieTitle);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
+            string url = searchMovieUrl + imdbKey + "/" + movieTitle;
+            IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
             {
@@ -79,10 +77,8 @@ namespace TutorialWebApi.Controllers
             List<Movie> movieResult = new List<Movie>();
 
             // client init + search with searchterm
-            var client = new RestClient(top100MovieUrl + imdbKey);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
+            string url = top100MovieUrl + imdbKey;
+            IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
             {
@@ -122,12 +118,9 @@ namespace TutorialWebApi.Controllers
         {
             Youtube youtubeResult = new Youtube();
             youtubeResult.videoId = "";
-
             string searchTerm = movie.title + movie.description + " official trailer";
-            var client = new RestClient(youtubeTrailerUrl + searchTerm + "&key=" + youtubeKey);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
+            string url = youtubeTrailerUrl + searchTerm + "&key=" + youtubeKey;
+            IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
             {
@@ -136,7 +129,7 @@ namespace TutorialWebApi.Controllers
                 List<Youtube> youtubeSearched = jsonHelper.ExtractYoutube(response.Content);
 
                 // return first result
-                if (youtubeSearched[0].videoId != null)
+                if (youtubeSearched != null && youtubeSearched[0].videoId != null)
                 { 
                 youtubeResult = youtubeSearched[0];
                 }
@@ -146,6 +139,15 @@ namespace TutorialWebApi.Controllers
                 return youtubeResult;
             }
             return youtubeResult;
+        }
+
+        private IRestResponse GetRestResponse(string url)
+        {
+            var client = new RestClient(url);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return response;
         }
     }
 }
