@@ -23,9 +23,9 @@ The MovieViewModel holds a List of Movies, which get iterated in the view
 A JsonHelper has been made to help deserialize the imdb-api and youtube-api json string, because deserializing this input directly didn't work
 so it had to be broken down into its elements
 
+Caching works for top10 movies and movieSearch, which is all the functionality that the MovieController uses to generate the views
+
 	Not implemented
-Caching was not implemented yet, and I might update this today because it is interesting and it should be able to work
-It is also needed because otherwise the API calls would go to its limit fairly quickly
 
 I've wasted too much time on getting a popup video to work with Magnific-popup, which just wouldn't work
 So a new tab will be opened by clicking on a movie poster, which will now open youtube without a link because the youtube-api is done for today
