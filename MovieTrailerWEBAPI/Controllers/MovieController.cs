@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TutorialWebApi.Entities;
 using TutorialWebApi.Models;
@@ -30,7 +31,8 @@ namespace TutorialWebApi.Controllers
         {
 			if(search != null)
             {
-				return View(new MovieViewModel(SearchMovie(search)));
+				string filteredSearch = FilteredSearch(search);
+				return View(new MovieViewModel(SearchMovie(filteredSearch)));
 			}
 			else
             {
@@ -38,7 +40,7 @@ namespace TutorialWebApi.Controllers
 			}
         }
 
-		public List<Movie> SearchMovie(string movieTitle)
+        public List<Movie> SearchMovie(string movieTitle)
 		{
 			List<Movie> cachedMovies = GetMoviesFromCache(movieTitle);
 			return cachedMovies;
@@ -48,6 +50,22 @@ namespace TutorialWebApi.Controllers
         {
 			List<Movie> cachedMovies = GetMoviesFromCache(top10Key);
 			return cachedMovies;
+		}
+
+
+		private string FilteredSearch(string search)
+		{
+			string filtered = "";
+
+			Regex reg = new Regex(@"[a-zA-Z0-9]");
+			foreach(char c in search)
+            {
+				if(reg.IsMatch(c.ToString()))
+                {
+					filtered = filtered + c;
+                }
+            }
+			return filtered;
 		}
 
 
