@@ -1,0 +1,33 @@
+﻿@model MovieViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div>
+
+    <div class="row">
+        @foreach (var item in @Model.MovieResults)
+        {
+        <div class="column" style="padding:35px">
+
+            <a class="popup-youtube" href="https://youtube.com/@item.youtubeItem.videoId" target="_blank">
+            <img src="@item.image" width="300" height="500" />
+            <p>@item.title</p>
+            </a>
+
+            <p>@item.description</p>
+        </div>
+        }
+
+    </div>
+</div>
+
+<script>
+    // popup doesnt work, so new tab instead..
+    $(document).ready(function () {
+        $('.popup-youtube').magnificPopup({
+            type: 'inline',
+            mainClass: 'mfp-fade'
+        });
+    });
+</script>
