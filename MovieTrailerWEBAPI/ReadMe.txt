@@ -27,8 +27,3 @@ Caching works for top10 movies and movieSearch, which is all the functionality t
 
 The search bar only accepts a-z A-Z 0-9 for security reasons, not enough time now to research the best options..
 Otherwise change the regex in MovieController
-
-	Not implemented
-
-I've wasted too much time on getting a popup video to work with Magnific-popup, which just wouldn't work
-So a new tab will be opened by clicking on a movie poster, which will now open youtube without a link because the youtube-api is done for today
