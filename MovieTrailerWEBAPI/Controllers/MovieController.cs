@@ -23,6 +23,7 @@ namespace TutorialWebApi.Controllers
 		public MovieController(IMemoryCache memoryCache)
         {
 			cache = memoryCache;
+			
         }
 
 		public IActionResult Index(string search)
@@ -39,13 +40,40 @@ namespace TutorialWebApi.Controllers
 
 		public List<Movie> SearchMovie(string movieTitle)
 		{
-			var movies = apiController.GetMovie(movieTitle);
-			return movies.Value;
+			List<Movie> cachedMovies = GetMoviesFromCache(movieTitle);
+			return cachedMovies;
 		}
 
 		public List<Movie> GetTop10()
         {
-			return apiController.GetTop10().Value;
+			List<Movie> cachedMovies = GetMoviesFromCache(top10Key);
+			return cachedMovies;
+		}
+
+
+		// key for cache is top10 for GetTop10, or movieTitle for a search title
+		private List<Movie> GetMoviesFromCache(string key)
+        {
+			List<Movie> movieCache;
+			if (!cache.TryGetValue(key, out movieCache))
+			{
+				if(key == top10Key)
+                {
+					movieCache = apiController.GetTop10().Value;
+				}
+                else
+                {
+					movieCache = apiController.GetMovie(key).Value;
+				}
+				AddMovieToCache(key, movieCache);
+			}
+			return movieCache;
+		}
+
+		private void AddMovieToCache(string key, List<Movie> movies)
+        {
+			var cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromHours(1));
+			cache.Set<List<Movie>>(key, movies, cacheOptions);
 		}
     }
 }
