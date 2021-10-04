@@ -2,32 +2,75 @@
 @{
     ViewData["Title"] = "Home Page";
 }
+<style>
+    .mfp-fade.mfp-bg {
+        opacity: 0;
+        -webkit-transition: all 0.15s ease-out;
+        -moz-transition: all 0.15s ease-out;
+        transition: all 0.15s ease-out;
+    }
 
-<div>
-
-    <div class="row">
-        @foreach (var item in @Model.MovieResults)
-        {
-        <div class="column" style="padding:35px">
-
-            <a class="popup-youtube" href="https://youtube.com/@item.youtubeItem.videoId" target="_blank">
-            <img src="@item.image" width="300" height="500" />
-            <p>@item.title</p>
-            </a>
-
-            <p>@item.description</p>
-        </div>
+        .mfp-fade.mfp-bg.mfp-ready {
+            opacity: 0.8;
         }
 
+        .mfp-fade.mfp-bg.mfp-removing {
+            opacity: 0;
+        }
+
+    .mfp-fade.mfp-wrap .mfp-content {
+        opacity: 0;
+        -webkit-transition: all 0.15s ease-out;
+        -moz-transition: all 0.15s ease-out;
+        transition: all 0.15s ease-out;
+    }
+
+    .mfp-fade.mfp-wrap.mfp-ready .mfp-content {
+        opacity: 1;
+    }
+
+    .mfp-fade.mfp-wrap.mfp-removing .mfp-content {
+        opacity: 0;
+    }
+</style>
+
+<div>
+    <div class="row">
+
+        
+          @foreach (var item in @Model.MovieResults)
+          {
+              <div class="column" style="padding:35px">
+
+                  @if (item.youtubeItem.videoId != "")
+                  {
+                      <a class="popup-youtube" href="https://youtube.com/@item.youtubeItem.videoId">
+                          <img src="@item.image" width="300" height="500" />
+                          <p>@item.title</p>
+                      </a>
+                  }
+                  else
+                  {
+                      <img src="@item.image" width="300" height="500" />
+                      <p>@item.title</p>
+                  }
+
+                  <p>@item.description</p>
+              </div>
+          } 
+        }
     </div>
 </div>
 
-<script>
-    // popup doesnt work, so new tab instead..
-    $(document).ready(function () {
-        $('.popup-youtube').magnificPopup({
-            type: 'inline',
-            mainClass: 'mfp-fade'
-        });
-    });
-</script>
+            <script>
+                $(document).ready(function () {
+                    $('.popup-youtube, .popup-vimeo, .popup-gmaps').magnificPopup({
+                        disableOn: 700,
+                        type: 'iframe',
+                        mainClass: 'mfp-fade',
+                        removalDelay: 160,
+                        preloader: false,
+                        fixedContentPos: false
+                    });
+                });
+            </script>
