@@ -11,7 +11,6 @@ using TutorialWebApi.Entities;
 namespace TutorialWebApi.Controllers
 {
 
-
     [ApiController]
     [Route("movies")]
     public class ApiController : ControllerBase
@@ -19,7 +18,6 @@ namespace TutorialWebApi.Controllers
         private JsonHelper jsonHelper = new JsonHelper();
         private readonly IOptions<AppSettings> _options;
 
-        
         public ApiController(IOptions<AppSettings> options)
         {
             _options = options;
@@ -30,41 +28,14 @@ namespace TutorialWebApi.Controllers
         [HttpGet("{movieTitle}")]
         public ActionResult<List<Movie>> GetMovie(string movieTitle)
         {
-            List<Movie> movieResult = new List<Movie>();
-
-            // client init + search with searchterm
-            string url = _options.Value.searchMovieUrl + _options.Value.imdbKey + "/" + movieTitle;
-            IRestResponse response = GetRestResponse(url);
-
-            if (response.IsSuccessful)
+            try
             {
-                JsonHelper jsonHelper = new JsonHelper();
-                movieResult = jsonHelper.ExtractMovies(response.Content);
-
-                    // top 5 search results movies + get Youtube link per movie
-                    List<Movie> top5List = new List<Movie>();
-                    int index = 0;
-                    foreach(Movie item in movieResult)
-                    {
-                        if(index > 5)
-                        {
-                            break;
-                        }
-
-                        Youtube tempYoutube = GetYoutube(item).Value;
-
-                        if (tempYoutube != null)
-                        {
-                            item.youtubeItem = tempYoutube;
-                            top5List.Add(item);
-                        }
-                        index++;
-                    }
-                    return top5List;
+                string url = _options.Value.searchMovieUrl + _options.Value.imdbKey + "/" + movieTitle;
+                return FetchMovies(5, url);
             }
-            else
+            catch
             {
-                return NotFound();
+                throw new ArgumentException();
             }
         }
 
@@ -74,42 +45,16 @@ namespace TutorialWebApi.Controllers
         [Route("movies/top10")]
         public ActionResult<List<Movie>> GetTop10()
         {
-            List<Movie> movieResult = new List<Movie>();
-
-            // client init + search with searchterm
-            string url = _options.Value.top100MovieUrl + _options.Value.imdbKey;
-            IRestResponse response = GetRestResponse(url);
-
-            if (response.IsSuccessful)
+            try
             {
-                JsonHelper jsonHelper = new JsonHelper();
-                movieResult = jsonHelper.ExtractMovies(response.Content);
-
-                    // top 10 search results
-                    List<Movie> top10List = new List<Movie>();
-                    int index = 0;
-                    foreach (Movie item in movieResult)
-                    {
-                        // stop with max 10 items
-                        if (index > 10)
-                        {
-                            break;
-                        }
-
-                        Youtube tempYoutube = GetYoutube(item).Value;
-
-                        if (tempYoutube != null) { item.youtubeItem = tempYoutube; }
-                        top10List.Add(item);
-
-                        index++;
-                    }
-                return top10List;
-                
+                string url = _options.Value.top100MovieUrl + _options.Value.imdbKey;
+                return FetchMovies(10, url);
             }
-            else
+            catch
             {
-                return NotFound();
+                throw new ArgumentException();
             }
+
         }
 
 
@@ -148,6 +93,35 @@ namespace TutorialWebApi.Controllers
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
             return response;
+        }
+
+        private List<Movie> FetchMovies(int maxReturn, string url)
+        {
+            List<Movie> movieOutput = new List<Movie>();
+
+            IRestResponse response = GetRestResponse(url);
+
+            if (response.IsSuccessful)
+            {
+                JsonHelper jsonHelper = new JsonHelper();
+                List<Movie> movieResult = new List<Movie>();
+                movieResult = jsonHelper.ExtractMovies(response.Content);
+
+                // how many movies to return max
+                var toReturnMovies = movieResult.Take<Movie>(maxReturn);
+
+                foreach (Movie item in toReturnMovies)
+                {
+                    Youtube tempYoutube = GetYoutube(item).Value;
+                    if (tempYoutube != null) { item.youtubeItem = tempYoutube; }
+                    movieOutput.Add(item);
+                }
+            }
+            else
+            {
+                return null;
+            }
+            return movieOutput;
         }
     }
 }
