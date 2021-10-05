@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using MovieTrailerWEBAPI;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -17,15 +19,16 @@ namespace TutorialWebApi.Controllers
 
 	public class MovieController : Controller
 	{
-		private ApiController apiController = new ApiController();
+		
 		private IMemoryCache cache;
 		private string top10Key = "top10";
+		private readonly IOptions<AppSettings> _options;
 
-		public MovieController(IMemoryCache memoryCache)
+		public MovieController(IMemoryCache memoryCache, IOptions<AppSettings> options)
         {
 			cache = memoryCache;
-			
-        }
+			_options = options;
+		}
 
 		public IActionResult Index(string search)
         {
@@ -72,16 +75,17 @@ namespace TutorialWebApi.Controllers
 		// key for cache is top10 for GetTop10, or movieTitle for a search title
 		private List<Movie> GetMoviesFromCache(string key)
         {
+			ApiController _apiController = new ApiController(_options);
 			List<Movie> movieCache;
 			if (!cache.TryGetValue(key, out movieCache))
 			{
 				if(key == top10Key)
                 {
-					movieCache = apiController.GetTop10().Value;
+					movieCache = _apiController.GetTop10().Value;
 				}
                 else
                 {
-					movieCache = apiController.GetMovie(key).Value;
+					movieCache = _apiController.GetMovie(key).Value;
 				}
 				AddMovieToCache(key, movieCache);
 			}

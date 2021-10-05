@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MovieTrailerWEBAPI;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -14,15 +16,13 @@ namespace TutorialWebApi.Controllers
     [Route("movies")]
     public class ApiController : ControllerBase
     {
-        private string imdbKey = "k_oaw79s1y";
-        private string youtubeKey = "AIzaSyBGw8lR_VWabVKfCooxSfRS40NcMaU1l14";
-        private string searchMovieUrl = "https://imdb-api.com/en/API/SearchMovie/";
-        private string top100MovieUrl = "https://imdb-api.com/en/API/MostPopularMovies/";
-        private string youtubeTrailerUrl = "https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=";
         private JsonHelper jsonHelper = new JsonHelper();
+        private readonly IOptions<AppSettings> _options;
 
-        public ApiController()
+        
+        public ApiController(IOptions<AppSettings> options)
         {
+            _options = options;
         }
 
         // Retrieve Movie + Youtube data by Title
@@ -33,7 +33,7 @@ namespace TutorialWebApi.Controllers
             List<Movie> movieResult = new List<Movie>();
 
             // client init + search with searchterm
-            string url = searchMovieUrl + imdbKey + "/" + movieTitle;
+            string url = _options.Value.searchMovieUrl + _options.Value.imdbKey + "/" + movieTitle;
             IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
@@ -77,7 +77,7 @@ namespace TutorialWebApi.Controllers
             List<Movie> movieResult = new List<Movie>();
 
             // client init + search with searchterm
-            string url = top100MovieUrl + imdbKey;
+            string url = _options.Value.top100MovieUrl + _options.Value.imdbKey;
             IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
@@ -119,7 +119,7 @@ namespace TutorialWebApi.Controllers
             Youtube youtubeResult = new Youtube();
             youtubeResult.videoId = "";
             string searchTerm = movie.title + movie.description + " official trailer";
-            string url = youtubeTrailerUrl + searchTerm + "&key=" + youtubeKey;
+            string url = _options.Value.youtubeTrailerUrl + searchTerm + "&key=" + _options.Value.youtubeKey;
             IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
