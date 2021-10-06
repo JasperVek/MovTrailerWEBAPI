@@ -19,6 +19,8 @@ namespace TutorialWebApi.Entities
 
         public string description { get; set; }
 
+        public string year { get; set; }
+
         public Youtube youtubeItem { get; set; }
 
     }

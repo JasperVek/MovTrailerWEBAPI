@@ -2,10 +2,12 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using MovieTrailerWEBAPI;
+using MovieTrailerWEBAPI.Entities;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TutorialWebApi.Entities;
 
@@ -16,11 +18,9 @@ namespace TutorialWebApi.Controllers
     [Route("movies")]
     public class ApiController : ControllerBase
     {
-        private JsonHelper jsonHelper = new JsonHelper();
         private readonly IOptions<AppSettings> _options;
         private ReposCache cacheFetcher;
-        private const string top10key = "top10";
-
+        
         public ApiController(IMemoryCache cache, IOptions<AppSettings> options)
         {
             _options = options;
@@ -38,7 +38,7 @@ namespace TutorialWebApi.Controllers
                 List<Movie> movies = cacheFetcher.CheckCache(movieTitle);
                 if (movies == null)
                 {
-                    if (movieTitle == top10key)
+                    if (movieTitle == _options.Value.top10Key)
                     {
                         return FetchTop10();
                     }
@@ -82,7 +82,7 @@ namespace TutorialWebApi.Controllers
         public ActionResult<Youtube> GetYoutube(Movie movie)
         {
             Youtube youtubeResult = new Youtube();
-            youtubeResult.videoId = "";
+            youtubeResult.id.videoId = "";
             string searchTerm = movie.title + movie.description + " official trailer";
             string url = _options.Value.youtubeTrailerUrl + searchTerm + "&key=" + _options.Value.youtubeKey;
             IRestResponse response = GetRestResponse(url);
@@ -90,20 +90,19 @@ namespace TutorialWebApi.Controllers
             if (response.IsSuccessful)
             {
                 // gets 5 results, so possibly more trailers to be shown per movie object in the future
-                JsonHelper jsonHelper = new JsonHelper();
-                List<Youtube> youtubeSearched = jsonHelper.ExtractYoutube(response.Content);
+                YoutubeListParse youtubeSearched = JsonSerializer.Deserialize<YoutubeListParse>(response.Content);
 
                 // return first result
-                if (youtubeSearched != null && youtubeSearched[0].videoId != null)
-                { 
-                youtubeResult = youtubeSearched[0];
+                if(youtubeSearched != null)
+                {
+                    return youtubeSearched.items[0];
                 }
+                return youtubeResult;
             }
             else
             {
                 return youtubeResult;
             }
-            return youtubeResult;
         }
 
         private IRestResponse GetRestResponse(string url)
@@ -124,12 +123,33 @@ namespace TutorialWebApi.Controllers
 
             if (response.IsSuccessful)
             {
-                JsonHelper jsonHelper = new JsonHelper();
-                List<Movie> movieResult = new List<Movie>();
-                movieResult = jsonHelper.ExtractMovies(response.Content);
+                MovieListParse movieResult = null;
 
-                // how many movies to return max
-                var toReturnMovies = movieResult.Take<Movie>(maxReturn);
+                // wow that was actually pretty easy whoeps
+                try
+                {
+                    // thanks to the imdb-api, this fills items or results in MovieListParse..
+                    movieResult = JsonSerializer.Deserialize<MovieListParse>(response.Content);
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+
+                IEnumerable<Movie> toReturnMovies;
+                if(movieResult.items != null)
+                {
+                    toReturnMovies = movieResult.items.Take<Movie>(maxReturn);
+                }
+                else if (movieResult.results != null)
+                {
+                    toReturnMovies = movieResult.results.Take<Movie>(maxReturn);
+                }
+                else
+                {
+                    return null;
+                }
 
                 foreach (Movie item in toReturnMovies)
                 {

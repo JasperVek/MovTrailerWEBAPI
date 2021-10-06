@@ -15,5 +15,6 @@ namespace MovieTrailerWEBAPI
 
         public string imdbKey { get; set; }
         public string youtubeKey { get; set; }
+        public string top10Key { get; set; }
     }
 }

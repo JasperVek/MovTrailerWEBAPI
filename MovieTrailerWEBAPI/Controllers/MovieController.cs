@@ -20,7 +20,6 @@ namespace TutorialWebApi.Controllers
 	public class MovieController : Controller
 	{
 		
-		private string top10Key = "top10";
 		private readonly IOptions<AppSettings> _options;
 		private ReposCache cacheFetcher;
 
@@ -51,7 +50,7 @@ namespace TutorialWebApi.Controllers
 
 		public List<Movie> GetTop10()
         {
-			List<Movie> cachedMovies = cacheFetcher.GetMoviesFromCache(top10Key);
+			List<Movie> cachedMovies = cacheFetcher.GetMoviesFromCache(_options.Value.top10Key);
 			return cachedMovies;
 		}
 

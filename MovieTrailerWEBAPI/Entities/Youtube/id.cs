@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TutorialWebApi.Entities
+namespace MovieTrailerWEBAPI.Entities
 {
-    public class Youtube
+    public class id
     {
         public string videoId { get; set; }
-
-        public string title { get; set; }
     }
 }
