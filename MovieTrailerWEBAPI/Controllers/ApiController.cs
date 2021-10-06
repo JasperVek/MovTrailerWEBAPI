@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using MovieTrailerWEBAPI;
 using RestSharp;
@@ -17,49 +18,68 @@ namespace TutorialWebApi.Controllers
     {
         private JsonHelper jsonHelper = new JsonHelper();
         private readonly IOptions<AppSettings> _options;
+        private ReposCache cacheFetcher;
+        private const string top10key = "top10";
 
-        public ApiController(IOptions<AppSettings> options)
+        public ApiController(IMemoryCache cache, IOptions<AppSettings> options)
         {
             _options = options;
+            cacheFetcher = ReposCache.getInstance(cache, _options);
         }
 
         // Retrieve Movie + Youtube data by Title
+        // is different because this is an API call
         // movies/movieTitle
         [HttpGet("{movieTitle}")]
-        public ActionResult<List<Movie>> GetMovie(string movieTitle)
+        public ActionResult<List<Movie>> GetMovies(string movieTitle)
+        {
+            try
+            {
+                List<Movie> movies = cacheFetcher.CheckCache(movieTitle);
+                if (movies == null)
+                {
+                    if (movieTitle == top10key)
+                    {
+                        return FetchTop10();
+                    }
+                    return FetchMovies(movieTitle);
+                }
+                return movies;
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+
+        public List<Movie> FetchMovies(string movieTitle)
         {
             try
             {
                 string url = _options.Value.searchMovieUrl + _options.Value.imdbKey + "/" + movieTitle;
                 return FetchMovies(5, url);
             }
-            catch
+            catch (Exception)
             {
-                throw new ArgumentException();
+                throw;
             }
         }
 
-        // Get the top 10 movies with Youtube trailer link
-        // largly the same code as GetMovie, but uses another API call to imdb-api
-        [HttpGet]
-        [Route("movies/top10")]
-        public ActionResult<List<Movie>> GetTop10()
+        public List<Movie> FetchTop10()
         {
             try
             {
                 string url = _options.Value.top100MovieUrl + _options.Value.imdbKey;
                 return FetchMovies(10, url);
             }
-            catch
+            catch (Exception)
             {
-                throw new ArgumentException();
+                throw;
             }
-
         }
 
-
         // Retrieve Youtube trailer results via Youtube API, with the first result as return 
-            public ActionResult<Youtube> GetYoutube(Movie movie)
+        public ActionResult<Youtube> GetYoutube(Movie movie)
         {
             Youtube youtubeResult = new Youtube();
             youtubeResult.videoId = "";
@@ -99,6 +119,7 @@ namespace TutorialWebApi.Controllers
         {
             List<Movie> movieOutput = new List<Movie>();
 
+            // build response
             IRestResponse response = GetRestResponse(url);
 
             if (response.IsSuccessful)
